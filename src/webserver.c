@@ -11,7 +11,7 @@
                     exit(-1);\
                     }
 
-//Globar variables;
+//Global variables;
 char *filepath;
 int _port;
 SOCKET server;
