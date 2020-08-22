@@ -50,6 +50,28 @@ char *readFile(const char *path){
 
 
 //Private Functions
+char *getExtension(const char *filename){
+    int count = 0;
+    for (size_t i = 0; i < strlen(filename); i++)
+    {
+        if(filename[i - 1] == '.'){
+            break;
+        }
+        count++;
+    }
+
+    int left = strlen(filename) - count;
+    char *ret = malloc(left);
+    ret = malloc(left);
+
+    char name[80];
+    strncpy(name, filename, count);
+    strncpy(ret, filename + count, left);
+    ret[left] = 0;
+    
+    return ret;    
+}
+
 char *MakePath(const char *dir, const char *filename){
     char *fullpath;
     
@@ -78,9 +100,28 @@ void Route(SOCKET client, const char *route){
     {
         while (files = readdir(dir))
         {
+            char http_res[100];
+
             if(!strcmp(files->d_name, route)){
                 printf("File found\n");
+
+                //Extension check
+                char *ext = getExtension(files->d_name);
+                if(!strcmp(ext, "html") || !strcmp(ext, "css") || !strcmp(ext, "js") || !strcmp(ext, "json")){
+                    //////Send Response///////
+                    
+                    sprintf(http_res, "HTTP/1.1 200 OK \r\nContent-Type: text/%s; charset=utf-8\r\n\r\n", ext);
+
+                    printf("%s\n", http_res);
+                    SASSERT(send(client, http_res, strlen(http_res) + 1, MSG_OOB), "SEND ERROR");
+                }
+                else
+                {
+                    sprintf(http_res, "HTTP/1.1 200 OK \r\nContent-Type: text/plain; charset=utf-8\r\n\r\n");
+                    SASSERT(send(client, http_res, strlen(http_res) + 1, MSG_OOB), "SEND ERROR");
+                }
                 
+                //Send File
                 char *file = readFile(MakePath(filepath, files->d_name));
                 SASSERT(send(client, file, strlen(file) + 1, MSG_OOB), "SEND ERROR");
 
@@ -96,6 +137,9 @@ void Route(SOCKET client, const char *route){
 }
 
 void SendDefaultHTML(SOCKET client){
+    char *def_http_res = "HTTP/1.1 200 OK \r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+    SASSERT(send(client, def_http_res, strlen(def_http_res) + 1, MSG_OOB), "SEND ERROR");
+
     const char *html_content = "<h1>I'm Awesome</h1> <p>You are also awesome.</p>" ;
     SASSERT(send(client, html_content, strlen(html_content) + 1, MSG_OOB), "SEND ERROR");
 }
@@ -120,11 +164,7 @@ void HandleClient(SOCKET client, SOCKADDR_IN client_addr){
     char *route;
     sscanf(msg_r, "GET /%s HTTP/1.1", route);
     printf("Route: %s\n", route);
-    
-    
-    //////Send Response///////
-    const char *http_res = "HTTP/1.1 200 OK \r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
-    SASSERT(send(client, http_res, strlen(http_res) + 1, MSG_OOB), "SEND ERROR");
+       
 
     //Send file
     Route(client, route);
