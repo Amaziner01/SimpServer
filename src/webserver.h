@@ -1,39 +1,32 @@
 #ifndef WEBSERV_H
 #define WEBSERV_H
 
-//Windows inc
 
+
+#include<dirent.h>
+
+//Windows inc
 #ifdef _WIN32
 #include<winsock.h>
 //Linux inc
 #elif __linux__
-#include<sys/sockets.c>
+#include<sys/sockets.h>
 
 #endif
 
 //WebServer
-typedef struct{
-    //Windows Elements
-    #ifdef _WIN32
-    SOCKET server;
-    SOCKADDR_IN server_addr;
-    //Linux Elements
-    #elif __linux__
-    int socket;
+typedef struct dirent DIRENT;
 
-    #endif
+/////Functions/////
 
-    int port;
-}WebServer;
+//WebServer
+void wsBegin(int port);
+void wsListen();
+void wsSetServePath(const char *path);
 
-//Functions
-WebServer *serverBegin(int port);
 
-void serverListen(WebServer *ws);
-
-void serverSend(WebServer *server, const char *send_cont);
-
-char *getFileContent(const char *path);
+//Files
+char *readFile(const char *path);
 
 
 #endif
